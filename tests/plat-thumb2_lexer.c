@@ -8,13 +8,14 @@ static void test_lex(const char *inst,
 		     enum inst_opcode op,
 		     struct inst_arg_tk *it)
 {
-	enum inst_opcode parse_op = thumb2_consume_mnemonic(&inst);
+	enum inst_opcode parse_op = 0;
+	mas_err_unwrap(thumb2_consume_mnemonic(&inst, &parse_op));
 	struct inst_arg_tk pit[MAX_PARAM_COUNT + 1];
 
 	assert2(parse_op == op, "opcode mismatch");
 
 	for (size_t i = 0; i < MAX_PARAM_COUNT + 1; i++) {
-		pit[i] = thumb2_consume_arg_tk(&inst, i == 0);
+		mas_err_unwrap(thumb2_consume_arg_tk(&inst, i == 0, &pit[i]));
 
 		assert2(pit[i].ty == it[i].ty,
 			"parsed token type do not match with testsuite");

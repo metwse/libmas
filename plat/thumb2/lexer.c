@@ -3,6 +3,7 @@
 #include "detail/opcodes.h"
 
 #include "../../src/common.h"
+#include "../../src/error.h"
 
 #include <ctype.h>
 #include <stdint.h>
@@ -32,11 +33,17 @@ void thumb2_lexer_static_destroy(void)
 	fhmap_mnemonic_name_destroy(&mnemonic_name_map);
 }
 
-enum inst_opcode thumb2_consume_mnemonic(const char **inst)
+mas_err_t *thumb2_consume_mnemonic(const char **inst, enum inst_opcode *out)
 {
 	size_t opcode_len = 0;
 	for (; isalnum((*inst)[opcode_len]); opcode_len++)
 		;
+
+	if (opcode_len == 0)
+		return_err(inv_mnemonic, "Invalid mnemonic!", "empty");
+
+	char mnemonic_str[opcode_len + 1];
+	strncpy(mnemonic_str, *inst, opcode_len);
 
 	const enum inst_opcode *opcode;
 
@@ -50,7 +57,7 @@ enum inst_opcode thumb2_consume_mnemonic(const char **inst)
 
 		if (opcode != NULL) {
 			(*inst) += opcode_len;
-			return *opcode;
+			return_ok(*opcode);
 		}
 
 		if (opcode_len > 2)
@@ -59,52 +66,53 @@ enum inst_opcode thumb2_consume_mnemonic(const char **inst)
 			break;
 	}
 
-	return -1;
+	return_err(inv_mnemonic, "Invalid mnemonic!", mnemonic_str);
 }
 
-uint32_t thumb2_consume_arg_reg_tk(const char **inst)
+mas_err_t *thumb2_consume_arg_reg_tk(const char **inst, uint32_t *out)
 {
 	switch ((*inst)[0]) {
 	case 'r': {
 		(*inst)++;
 		uint32_t reg = strtol(*inst, (char **) inst, 0);
 
-		return reg;
+		if (reg < 16)
+			return_ok(reg);
+		break;
 	}
 	case 's':
 		if ((*inst)[1] == 'p') {
 			*inst += 2;
-			return 13;
-		} else {
-			return -1;
+			return_ok(13);
 		}
+		break;
+
 	case 'l':
 		if ((*inst)[1] == 'r') {
 			*inst += 2;
-			return 14;
-		} else {
-			return -1;
+			return_ok(14);
 		}
+		break;
+
 	case 'p':
 		if ((*inst)[1] == 'c') {
 			*inst += 2;
-			return 15;
-		} else {
-			return -1;
+			return_ok(15);
 		}
-	default:
-		fatal("invalid character %c", (*inst)[0]);
+		break;
 	}
 
-	_unreachable; return 0;
+	return_err(inv_value, "Invalid register (r0-12,sp,lr,pc).", 0, 15, 0);
 }
 
-struct inst_arg_tk thumb2_consume_arg_tk(const char **inst, bool first)
+mas_err_t *thumb2_consume_arg_tk(const char **inst,
+				 bool first,
+				 struct inst_arg_tk *out)
 {
 	const char *start = *inst;
 
 	if ((*inst)[0] == '\0')
-		return (struct inst_arg_tk) { .ty = ARG_TK_END };
+		return_ok((struct inst_arg_tk) { .ty = ARG_TK_END });
 
 	/* cond suffix */
 	if (isalpha(start[0]) && first) {
@@ -113,13 +121,16 @@ struct inst_arg_tk thumb2_consume_arg_tk(const char **inst, bool first)
 				if (start[0] == thumb2_mnemonic_cond_suffix[i][0] &&
 				    start[1] == thumb2_mnemonic_cond_suffix[i][1]) {
 					*inst += 2;
-					return (struct inst_arg_tk) {
+					return_ok((struct inst_arg_tk) {
 						.ty = ARG_TK_COND,
 						.seminfo.parsed.cond_suffix = i
-					};
+					});
 				}
 
-		fatal("invalid condition suffix!");
+		char cond_suffix[3] = { start[0], start[1], '\0' };
+		return_err(inv_mnemonic,
+			   "Invalid condition suffix!",
+			   cond_suffix);
 	}
 
 	while (isspace((*inst)[0]) || (*inst)[0] == ',' || (*inst)[0] == ']')
@@ -130,22 +141,22 @@ struct inst_arg_tk thumb2_consume_arg_tk(const char **inst, bool first)
 		(*inst)++;
 		uint32_t imm = strtol(*inst, (char **) inst, 0);
 
-		return (struct inst_arg_tk) { .ty = ARG_TK_IMM, .seminfo.parsed.imm = imm };
+		return_ok((struct inst_arg_tk) {
+			.ty = ARG_TK_IMM,
+			.seminfo.parsed.imm = imm
+		});
 	}
 	case 'r':
 	case 's':
 	case 'l':
 	case 'p': {  /* collect reg */
-		uint32_t reg = thumb2_consume_arg_reg_tk(inst);
+		uint32_t reg;
+		return_try(thumb2_consume_arg_reg_tk(inst, &reg));
 
-		if (reg < 16) {
-			return (struct inst_arg_tk) {
-				.ty = ARG_TK_REG,
-				.seminfo.parsed.reg = reg
-			};
-		} else {
-			fatal("invalid register number %d", reg); break;
-		}
+		return_ok((struct inst_arg_tk) {
+			.ty = ARG_TK_REG,
+			.seminfo.parsed.reg = reg
+		});
 	}
 
 	case '{': {  /* collect reg_ls */
@@ -156,17 +167,20 @@ struct inst_arg_tk thumb2_consume_arg_tk(const char **inst, bool first)
 			(*inst)++;
 
 		while ((*inst)[0] != '}') {
-			uint32_t reg = thumb2_consume_arg_reg_tk(inst);
+			uint32_t reg;
+			return_try(thumb2_consume_arg_reg_tk(inst, &reg));
 
 			while (isspace((*inst)[0]) || (*inst)[0] == ',')
 				(*inst)++;
 
 			if ((*inst)[0] == '\0')
-				fatal("unterminated register list");
+				return_err(syntax, "Unterminated register list.");
 
 			if (!(reg < 8 || reg == 14 || reg == 15))
-				fatal("only low registers and pc&lr allowed in "
-				      "register list");
+				return_err(inv_value,
+					   "Only low registers and pc & lr "
+					   "allowed in register list.",
+					   0, 0, 0);
 			if (reg < 8)
 				reg_ls.reg_ls |= 1 << reg;
 			if (reg == 14)
@@ -177,41 +191,39 @@ struct inst_arg_tk thumb2_consume_arg_tk(const char **inst, bool first)
 
 		(*inst)++;  /* consume the } */
 
-		return (struct inst_arg_tk) {
+		return_ok((struct inst_arg_tk) {
 			.ty = ARG_TK_REG_LS,
 			.seminfo.parsed.reg_ls = reg_ls
-		};
+		});
 	}
 
 	case '%':  /* vaarg placeholders */
 		*inst += 2;  /* collect %x */
 		switch ((*inst)[-1]) {
 		case 'r':
-			return (struct inst_arg_tk) { .ty = ARG_TK_REG_VA_NUM, };
+			return_ok((struct inst_arg_tk) { .ty = ARG_TK_REG_VA_NUM });
 		case 'R':
-			return (struct inst_arg_tk) { .ty = ARG_TK_REG_VA_STR, };
+			return_ok((struct inst_arg_tk) { .ty = ARG_TK_REG_VA_STR });
 		case 'l':
-			return (struct inst_arg_tk) { .ty = ARG_TK_REG_LS_VA, };
+			return_ok((struct inst_arg_tk) { .ty = ARG_TK_REG_LS_VA });
 		case 'i':
-			return (struct inst_arg_tk) { .ty = ARG_TK_IMM_VA, };
+			return_ok((struct inst_arg_tk) { .ty = ARG_TK_IMM_VA });
 		default:
-			fatal("invalid vaarg placeholders %c", (*inst)[-1]);
-			break;
+			return_err(syntax, "Invalid placeholder for %.");
 		}
 		break;
 
 	case '[':  /* collect brace */
 		(*inst)++;
-		return (struct inst_arg_tk) { .ty = ARG_TK_BRACE };
+		return_ok((struct inst_arg_tk) { .ty = ARG_TK_BRACE });
 	case '!':  /* excl */
 		(*inst)++;
-		return (struct inst_arg_tk) { .ty = ARG_TK_EXCL };
+		return_ok((struct inst_arg_tk) { .ty = ARG_TK_EXCL });
 	case '\0':  /* end */
-		return (struct inst_arg_tk) { .ty = ARG_TK_END };
+		return_ok((struct inst_arg_tk) { .ty = ARG_TK_END });
 
 	default:
-		fatal("invalid character %c", (*inst)[0]);
-		break;
+		return_err(syntax, "Invalid char at input stream.");
 	}
 
 	_unreachable;

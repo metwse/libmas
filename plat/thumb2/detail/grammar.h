@@ -6,8 +6,10 @@
 #include "opcodes.h"
 
 #include "../../../include/detail.h"
+#include "../../../include/error.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 
 /* Argument token to be parsed. */
@@ -53,17 +55,23 @@ _masi void thumb2_dump_grammar(void);
 
 /* Extract opcode from the string, consuming its mnemonic. Returns -1 if
  * the mnemonic is not valid.*/
-_masi enum inst_opcode thumb2_consume_mnemonic(const char **inst);
+_masi mas_err_t *thumb2_consume_mnemonic(const char **inst,
+					 enum inst_opcode *out) _mas_wur;
 
 /* Extract one argument from instruction string.
  * Checks condition suffix if first==true. */
-_masi struct inst_arg_tk thumb2_consume_arg_tk(const char **inst, bool first);
+_masi mas_err_t *thumb2_consume_arg_tk(const char **inst,
+				       bool first,
+				       struct inst_arg_tk *out) _mas_wur;
 
 /* Extract one register argument from instruction string. */
-_masi uint32_t thumb2_consume_arg_reg_tk(const char **inst);
+_masi mas_err_t *thumb2_consume_arg_reg_tk(const char **inst,
+					   uint32_t *out) _mas_wur;
 
 /* Parse and validate the token list. */
-_masi struct inst thumb2_validate(enum inst_opcode, const struct inst_arg_tk *);
+_masi mas_err_t *thumb2_validate(enum inst_opcode,
+				 const struct inst_arg_tk *,
+				 struct inst *out) _mas_wur;
 
 
 #endif

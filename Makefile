@@ -100,8 +100,10 @@ $(OBJ_DIR)/%.test.o: $(TEST_DIR)/%.c | $(OBJ_DIR)/
 
 
 # Automatic directory targets.
+.SECONDARY:
 $(DIST_DIR)%/:
 	mkdir -p $@
+.SECONDARY:
 $(VENDOR_DIR)%/:
 	mkdir -p $@
 
