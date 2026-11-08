@@ -76,15 +76,15 @@ thumb2_inst_params[INST_COUNT][MAX_ALTERNATIVE_COUNT + 1][MAX_PARAM_COUNT + 1] =
 			/* register */
 			{ PARAM_LOW_REG, PARAM_LOW_REG } },
 
-	[OP_B] = {	{ PARAM_COND, PARAM_IMM8_0_LABEL },			/* TODO: make this label signed (-256-254) */
-			{ PARAM_IMM11_0_LABEL } },				/* TODO: make this label signed (-2048-2046) */
+	[OP_B] = {	{ PARAM_COND, PARAM_SIMM8_0_LABEL },
+			{ PARAM_SIMM11_0_LABEL } },
 
 			/* register */
 	[OP_BICS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
 
 	[OP_BKPT] = {	{ PARAM_IMM8 } },
 
-	[OP_BL] = {	{ PARAM_IMM24_0_LABEL } },				/* TODO: make this label signed (-16777216-16777214) */
+	[OP_BL] = {	{ PARAM_SIMM24_0_LABEL } },
 
 			/* register */
 	[OP_BLX] = {	{ PARAM_NOT_PC_REG } },

@@ -6,6 +6,7 @@
 #include "../../src/error.h"
 
 #include <ctype.h>
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -139,11 +140,11 @@ mas_err_t *thumb2_consume_arg_tk(const char **inst,
 	switch ((*inst)[0]) {
 	case '#': {  /* collect imm */
 		(*inst)++;
-		uint32_t imm = strtol(*inst, (char **) inst, 0);
+		intmax_t simm = strtoimax(*inst, (char **) inst, 0);
 
 		return_ok((struct inst_arg_tk) {
 			.ty = ARG_TK_IMM,
-			.seminfo.parsed.imm = imm
+			.seminfo.parsed.simm = simm
 		});
 	}
 	case 'r':

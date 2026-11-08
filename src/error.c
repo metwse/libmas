@@ -3,6 +3,7 @@
 #include "error.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,13 +11,13 @@
 
 union err_data {
 	struct err_data_inv_value {
-		size_t min;
-		size_t max;
-		size_t step;
+		ptrdiff_t min;
+		ptrdiff_t max;
+		ptrdiff_t step;
 	} inv_value;
 
 	struct err_data_label_too_far {
-		size_t offset;
+		ptrdiff_t offset;
 	} label_too_far;
 };
 
@@ -84,11 +85,11 @@ void mas_err_message(mas_err_t *err, FILE *out)
 
 		if (!(inv_value.min == 0 && inv_value.max == 0)) {
 			fprintf(out,
-				"Range error! (range=[%zu, %zu]",
+				"Range error! (range=[%td, %td]",
 				inv_value.min,
 				inv_value.max);
 			if (inv_value.step)
-				fprintf(out, ", step=%zu)\n", inv_value.step);
+				fprintf(out, ", step=%td)\n", inv_value.step);
 			else
 				fprintf(out, ")\n");
 		} else {
@@ -109,7 +110,7 @@ void mas_err_message(mas_err_t *err, FILE *out)
 		rdata(label_too_far);
 
 		fprintf(out,
-			"Label too far away! (label=%s, offset=%zu)\n",
+			"Label too far away! (label=%s, offset=%td)\n",
 			err->str,
 			label_too_far.offset);
 		break;
@@ -148,9 +149,9 @@ mas_err_t *err_xnew_list(const char *msg)
 }
 
 mas_err_t *err_xnew_inv_value(const char *msg,
-			      size_t min,
-			      size_t max,
-			      size_t opt_step)
+			      ptrdiff_t min,
+			      ptrdiff_t max,
+			      ptrdiff_t opt_step)
 {
 	malloc_err2(MAS_ERR_INV_VALUE);
 	wdata(inv_value);
@@ -180,7 +181,7 @@ mas_err_t *err_xnew_label_not_found(const char *msg,
 
 mas_err_t *err_xnew_label_too_far(const char *msg,
 				  const char *label,
-				  size_t offset)
+				  ptrdiff_t offset)
 {
 	malloc_err3(MAS_ERR_LABEL_TOO_FAR, label);
 	wdata(label_too_far);

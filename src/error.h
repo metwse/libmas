@@ -5,6 +5,7 @@
 #include "../include/detail.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 
 #define return_ok(...) do { (*out) = (__VA_ARGS__); return NULL; } while (0)
@@ -18,9 +19,9 @@
 _masi mas_err_t *err_xnew_list(const char *msg) _mas_wur;
 
 _masi mas_err_t *err_xnew_inv_value(const char *msg,
-				    size_t min,
-				    size_t max,
-				    size_t opt_step) _mas_wur;
+				    ptrdiff_t min,
+				    ptrdiff_t max,
+				    ptrdiff_t opt_step) _mas_wur;
 
 _masi mas_err_t *err_xnew_inv_mnemonic(const char *msg,
 				       const char *mnemonic) _mas_wur;
@@ -30,7 +31,7 @@ _masi mas_err_t *err_xnew_label_not_found(const char *msg,
 
 _masi mas_err_t *err_xnew_label_too_far(const char *msg,
 					const char *label,
-					size_t offset) _mas_wur;
+					ptrdiff_t offset) _mas_wur;
 
 _masi mas_err_t *err_xnew_syntax(const char *msg) _mas_wur;
 

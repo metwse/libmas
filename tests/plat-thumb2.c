@@ -35,9 +35,11 @@ int main(void)
 	mas_thumb2_as_yxfeed(as, "b #4");
 
 	mas_thumb2_as_yxfeed(as, "bics r3, r7");
-	mas_thumb2_as_yxfeed(as, "bkpt #170");
+	mas_thumb2_as_yxfeed(as, "bkpt #255");
 
-	mas_thumb2_as_yxfeed(as, "bl #16777216");
+	mas_thumb2_as_yxfeed(as, "bl %i", -16777216);
+	mas_thumb2_as_yxfeed(as, "bl #-12");
+	mas_thumb2_as_yxfeed(as, "bl %i", 16777214);
 
 	mas_thumb2_as_yxfeed(as, "blx %r", 11);
 	mas_thumb2_as_yxfeed(as, "bx %r", 10);

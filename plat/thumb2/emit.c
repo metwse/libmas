@@ -128,12 +128,12 @@ void thumb2_inst_emit(void *out, const struct inst *inst)
 	case OP_B:
 		switch (alt_idx) {
 		case 0:
-			emit2(args[1].imm >> 1, 8);
+			emit2(args[1].simm >> 1, 8);
 			emit2(args[0].cond_suffix, 4);
 			emit3(b(1101));
 			break;
 		case 1:
-			emit2(args[0].imm >> 1, 11);
+			emit2(args[0].simm >> 1, 11);
 			emit3(b(11100));
 			break;
 		}
@@ -161,15 +161,15 @@ void thumb2_inst_emit(void *out, const struct inst *inst)
 	case OP_BL:
 		switch (alt_idx) {
 		case 0: {
-			int s = (args[0].imm & (1 << 24)) ? 1 : 0;
-			int j1 = s ^ ((args[0].imm & (1 << 23)) ? 1 : 0);
-			int j2 = s ^ ((args[0].imm & (1 << 22)) ? 1 : 0);
+			int s = (args[0].simm & (1 << 24)) ? 1 : 0;
+			int j1 = s ^ ((args[0].simm & (1 << 23)) ? 1 : 0);
+			int j2 = s ^ ((args[0].simm & (1 << 22)) ? 1 : 0);
 
-			emit2(args[0].imm >> 12, 10);
+			emit2(args[0].simm >> 12, 10);
 			emit2(s, 1);
 			emit2(b(11110), 5);
 
-			emit2(args[0].imm >> 1, 11);
+			emit2(args[0].simm >> 1, 11);
 			emit2(j2, 1);
 			emit2(1, 1);
 			emit2(j1, 1);

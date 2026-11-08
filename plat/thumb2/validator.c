@@ -5,6 +5,7 @@
 #include "../../src/error.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -107,7 +108,11 @@ mas_err_t *validate_reg_ls(const struct inst_arg_tk *arg_in,
 mas_err_t *validate_imm(const struct inst_arg_tk *arg_in,
 			enum inst_param param)
 {
-	uint32_t imm = arg_in->seminfo.parsed.imm;
+	static const bool is_signed[] = {
+		[PARAM_SIMM8_0_LABEL] = true,
+		[PARAM_SIMM11_0_LABEL] = true,
+		[PARAM_SIMM24_0_LABEL] = true,
+	};
 
 	static const uint32_t ranges[] = {
 		[PARAM_IMM0] = 0,
@@ -117,11 +122,11 @@ mas_err_t *validate_imm(const struct inst_arg_tk *arg_in,
 		[PARAM_IMM7_00] = 7,
 		[PARAM_IMM8] = 8,
 		[PARAM_IMM8_0] = 8,
-		[PARAM_IMM8_0_LABEL] = 8,
+		[PARAM_SIMM8_0_LABEL] = 8,
 		[PARAM_IMM8_00] = 8,
 		[PARAM_IMM8_00_LABEL] = 8,
-		[PARAM_IMM11_0_LABEL] = 11,
-		[PARAM_IMM24_0_LABEL] = 24,
+		[PARAM_SIMM11_0_LABEL] = 11,
+		[PARAM_SIMM24_0_LABEL] = 24,
 	};
 
 	static const uint32_t pad[] = {
@@ -129,21 +134,33 @@ mas_err_t *validate_imm(const struct inst_arg_tk *arg_in,
 		[PARAM_IMM5_00] = 2,
 		[PARAM_IMM7_00] = 2,
 		[PARAM_IMM8_0] = 1,
-		[PARAM_IMM8_0_LABEL] = 1,
+		[PARAM_SIMM8_0_LABEL] = 1,
 		[PARAM_IMM8_00] = 2,
 		[PARAM_IMM8_00_LABEL] = 2,
-		[PARAM_IMM11_0_LABEL] = 1,
-		[PARAM_IMM24_0_LABEL] = 1,
+		[PARAM_SIMM11_0_LABEL] = 1,
+		[PARAM_SIMM24_0_LABEL] = 1,
 	};
 
-	uint32_t mask = ((1 << ranges[param]) - 1) << (pad[param]);
+	ptrdiff_t max = 1 << (ranges[param] + pad[param]);
+	ptrdiff_t min = 0;
 
-	if ((mask & imm) != imm)
+	/* signed min/max range */
+	if (is_signed[param]) {
+		min -= max / 2;
+		max = max / 2 - 2;
+	} else {
+		max -= 1 << pad[param];
+	}
+
+	int32_t simm = arg_in->seminfo.parsed.simm;
+	int32_t mask = -1 << pad[param];
+
+	if ((mask & simm) != simm || simm < min || max < simm)
 		return_err(inv_value,
 			   "IMM is not in valid range.",
-			   0,
-			   1 << (ranges[param] + pad[param]),
-			   1 << pad[param]);
+			   min,
+			   max,
+			   1 << pad[param]  /* step */);
 
 	return NULL;
 }

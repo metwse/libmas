@@ -24,7 +24,7 @@
 #define is_reg_ls(param) \
 	((param) >= PARAM_LOW_REG_LS && (param) <= PARAM_PUSH_REG_LS)
 #define is_imm(param) \
-	((param) >= PARAM_IMM0 && (param) <= PARAM_IMM24_0_LABEL)
+	((param) >= PARAM_IMM0 && (param) <= PARAM_SIMM24_0_LABEL)
 
 
 enum inst_opcode {  // GREP "ORDER OP" if you change this enum
@@ -62,10 +62,10 @@ enum inst_param {  // GREP "ORDER PARAM" if you change this enum
 	PARAM_IMM3,  /* 3-bit imm */
 	PARAM_IMM5, PARAM_IMM5_00,
 	PARAM_IMM7_00,
-	PARAM_IMM8, PARAM_IMM8_0, PARAM_IMM8_0_LABEL,
+	PARAM_IMM8, PARAM_IMM8_0, PARAM_SIMM8_0_LABEL,
 		PARAM_IMM8_00, PARAM_IMM8_00_LABEL,
-	PARAM_IMM11_0_LABEL,
-	PARAM_IMM24_0_LABEL,
+	PARAM_SIMM11_0_LABEL,
+	PARAM_SIMM24_0_LABEL,
 
 	PARAM_EXCL,
 	PARAM_BRACE,
@@ -99,7 +99,8 @@ struct inst {
 			};
 		} reg_ls;
 
-		uint32_t imm;
+		uint32_t imm  /* unsingned imm */;
+		int32_t simm  /* signed imm */;
 
 		enum inst_cond cond_suffix;
 	} args[MAX_PARAM_COUNT];
