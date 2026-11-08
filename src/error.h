@@ -7,12 +7,12 @@
 #include <stddef.h>
 
 
-#define return_ok(...) do { (*out) = (__VA_ARGS__); return NULL; } while(0)
+#define return_ok(...) do { (*out) = (__VA_ARGS__); return NULL; } while (0)
 #define return_try(res2) do { \
 		mas_err_t *res = res2; \
 		if (res != NULL) return res; \
 	} while(0)
-#define return_err(ty, ...) return err_xnew_ ## ty(__VA_ARGS__)
+#define return_err(ty, ...) do { return err_xnew_ ## ty(__VA_ARGS__); } while (0)
 
 
 _masi mas_err_t *err_xnew_list(const char *msg) _mas_wur;

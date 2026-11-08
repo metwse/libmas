@@ -10,119 +10,102 @@
 
 
 #define cur_param thumb2_inst_params[res.opcode][res.alt_idx][i]
-#define set_err(new_err) do { \
-		if (*err) mas_err_free(*err); \
-		*err = new_err; \
-	} while (0)
 
 
-static bool validate_reg(const struct inst_arg_tk *arg_in,
-			 enum inst_param param,
-			 mas_err_t **err)
+mas_err_t *validate_reg(const struct inst_arg_tk *arg_in,
+			enum inst_param param)
 {
 	uint32_t reg = arg_in->seminfo.parsed.reg;
 
 	switch (param) {
 	case PARAM_LOW_REG:
-		if (reg > 7) {
-			*err = err_xnew_inv_value("Expected low register (r0-r7).",
-						  0, 7, 0);
-			return false;
-		}
+		if (reg > 7)
+			return_err(inv_value,
+				   "Expected low register (r0-r7).",
+				   0, 7, 0);
 		break;
 
 	case PARAM_HIGH_NOT_SP_REG:
-		if (reg < 8 || reg == 13) {
-			*err = err_xnew_inv_value("Expected high register "
-						  "excluding sp (r8-r12,r14-r15).",
-						  8, 15, 0);
-			return false;
-		}
+		if (reg < 8 || reg == 13)
+			return_err(inv_value,
+				   "Expected high register excluding sp "
+				   "(r8-r12,r14-r15).",
+				   8, 15, 0);
 		break;
 
 	case PARAM_ANY_REG:
 		break;
 
 	case PARAM_NOT_SP_REG:
-		if (reg == 13) {
-			*err = err_xnew_inv_value("Expected register other "
-						  "than sp (r0-r12,r14-r15).",
-						  0, 15, 0);
-			return false;
-		}
+		if (reg == 13)
+			return_err(inv_value,
+				   "Expected register other than sp "
+				   "(r0-r12,r14-r15).",
+				   0, 15, 0);
 		break;
 
 	case PARAM_NOT_PC_REG:
-		if (reg == 15) {
-			*err = err_xnew_inv_value("Expected register other "
-						  "than sp (r0-r14).",
-						  0, 14, 0);
-			return false;
-		}
+		if (reg == 15)
+			return_err(inv_value,
+				   "Expected register other than sp (r0-r14).",
+				   0, 14, 0);
 		break;
 
 	case PARAM_SP:
-		if (reg != 13) {
-			*err = err_xnew_inv_value("Expected register sp.",
-						  13, 13, 0);
-			return false;
-		}
+		if (reg != 13)
+			return_err(inv_value,
+				   "Expected register sp.",
+				   13, 13, 0);
 		break;
 
 	case PARAM_PC:
-		if (reg != 15) {
-			*err = err_xnew_inv_value("Expected register pc.",
-						  15, 15, 0);
-			return false;
-		}
+		if (reg != 15)
+			return_err(inv_value,
+				   "Expected register pc.",
+				   15, 15, 0);
 		break;
 
 	default: _unreachable;
 	}
 
-	return true;
+	return NULL;
 }
 
-static bool validate_reg_ls(const struct inst_arg_tk *arg_in,
-			    enum inst_param param,
-			    mas_err_t **err)
+mas_err_t *validate_reg_ls(const struct inst_arg_tk *arg_in,
+			   enum inst_param param)
 {
 	struct inst_arg_data_reg_ls reg_ls = arg_in->seminfo.parsed.reg_ls;
 
 	switch (param) {
 	case PARAM_LOW_REG_LS:
-		if (reg_ls.lr || reg_ls.pc) {
-			*err = err_xnew_inv_value("Cannot have lr or pc here.",
-						  0, 0, 0);
-			return false;
-		}
+		if (reg_ls.lr || reg_ls.pc)
+			return_err(inv_value,
+				   "Cannot have lr or pc here.",
+				   0, 0, 0);
 		break;
 
 	case PARAM_POP_REG_LS:
-		if (reg_ls.lr) {
-			*err = err_xnew_inv_value("Cannot have lr here.",
-						  0, 0, 0);
-			return false;
-		}
+		if (reg_ls.lr)
+			return_err(inv_value,
+				   "Cannot have lr here.",
+				   0, 0, 0);
 		break;
 
 	case PARAM_PUSH_REG_LS:
-		if (reg_ls.pc) {
-			*err = err_xnew_inv_value("Cannot have pc here.",
-						  0, 0, 0);
-			return false;
-		}
+		if (reg_ls.pc)
+			return_err(inv_value,
+				   "Cannot have pc here.",
+				   0, 0, 0);
 		break;
 
 	default: _unreachable;
 	}
 
-	return true;
+	return NULL;
 }
 
-static bool validate_imm(const struct inst_arg_tk *arg_in,
-			 enum inst_param param,
-			 mas_err_t **err)
+mas_err_t *validate_imm(const struct inst_arg_tk *arg_in,
+			enum inst_param param)
 {
 	uint32_t imm = arg_in->seminfo.parsed.imm;
 
@@ -155,64 +138,51 @@ static bool validate_imm(const struct inst_arg_tk *arg_in,
 
 	uint32_t mask = ((1 << ranges[param]) - 1) << (pad[param]);
 
-	if ((mask & imm) != imm) {
-		*err = err_xnew_inv_value("IMM is not in valid range.",
-					  0,
-					  1 << (ranges[param] + pad[param]),
-					  1 << pad[param]);
-		return false;
-	}
+	if ((mask & imm) != imm)
+		return_err(inv_value,
+			   "IMM is not in valid range.",
+			   0,
+			   1 << (ranges[param] + pad[param]),
+			   1 << pad[param]);
 
-	return true;
+	return NULL;
 }
 
-static bool validate_arg(const struct inst_arg_tk *arg_in,  /* argument to parse */
-			 union inst_arg_data *arg_out,  /* parsed output */
-			 enum inst_param param,  /* parameter of the argument */
-			 mas_err_t **err)  /* optional error output*/
+mas_err_t *validate_arg(const struct inst_arg_tk *arg_in,  /* argument to parse */
+			union inst_arg_data *arg_out,  /* parsed output */
+			enum inst_param param)  /* parameter of the argument */
 {
 	switch (arg_in->ty) {
 	case ARG_TK_REG:
-		if (!is_reg(param)) {
-			*err = err_xnew_syntax("Expected register.");
-			return false;
-		}
+		if (!is_reg(param))
+			return_err(syntax, "Expected register.");
 
-		if (!validate_reg(arg_in, param, err))
-			return false;
+		return_try(validate_reg(arg_in, param));
 
 		arg_out->reg = arg_in->seminfo.parsed.reg;
 		break;
 
 	case ARG_TK_REG_LS:
-		if (!is_reg_ls(param)) {
-			*err = err_xnew_syntax("Expected register list.");
-			return false;
-		}
+		if (!is_reg_ls(param))
+			return_err(syntax, "Expected register list.");
 
-		if (!validate_reg_ls(arg_in, param, err))
-			return false;
+		return_try(validate_reg_ls(arg_in, param));
 
 		arg_out->reg_ls = arg_in->seminfo.parsed.reg_ls;
 		break;
 
 	case ARG_TK_IMM:
-		if (!is_imm(param)) {
-			*err = err_xnew_syntax("Expected IMM.");
-			return false;
-		}
+		if (!is_imm(param))
+			return_err(syntax, "Expected IMM.");
 
-		if (!validate_imm(arg_in, param, err))
-			return false;
+		return_try(validate_imm(arg_in, param));
 
 		arg_out->imm = arg_in->seminfo.parsed.imm;
 		break;
 
 	case ARG_TK_COND:
-		if (param != PARAM_COND) {
-			*err = err_xnew_syntax("Expected condition suffix.");
-			return false;
-		}
+		if (param != PARAM_COND)
+			return_err(syntax, "Expected condition suffix.");
 
 		arg_out->cond_suffix = arg_in->seminfo.parsed.cond_suffix;
 		break;
@@ -225,24 +195,19 @@ static bool validate_arg(const struct inst_arg_tk *arg_in,  /* argument to parse
 		break;
 
 	case ARG_TK_EXCL:
-		if (param != PARAM_EXCL) {
-			*err = err_xnew_syntax("Expected excl mark (!).");
-			return false;
-		}
+		if (param != PARAM_EXCL)
+			return_err(syntax, "Expected excl mark (!).");
 		break;
 	case ARG_TK_BRACE:
-		if (param != PARAM_BRACE) {
-			*err = err_xnew_syntax("Expected brace mark ([).");
-			return false;
-		}
+		if (param != PARAM_BRACE)
+			return_err(syntax, "Expected brace mark ([).");
 		break;
 
 	case ARG_TK_END:
-		return param == PARAME;
-		break;
+		return_err(syntax, "Leftover tokens at the end of instruction.");
 	}
 
-	return true;
+	return NULL;
 }
 
 mas_err_t *thumb2_validate(enum inst_opcode op,
@@ -250,7 +215,7 @@ mas_err_t *thumb2_validate(enum inst_opcode op,
 			   struct inst *out)
 {
 	mas_err_t *errs[MAX_ALTERNATIVE_COUNT] = { 0 };
-	size_t max_match_i = 0;
+	size_t max_match_len = 0;
 
 	struct inst res = { .opcode = op, .alt_idx = 0, };
 
@@ -269,12 +234,17 @@ mas_err_t *thumb2_validate(enum inst_opcode op,
 				return_ok(res);
 			}
 
-			if (!validate_arg(&args[i],
-					  &res.args[i],
-					  cur_param,
-					  &errs[res.alt_idx])) {
-				if (i > max_match_i) {
-					max_match_i = i;
+			mas_err_t *validation_err = validate_arg(&args[i],
+								 &res.args[i],
+								 cur_param);
+
+			if (validation_err) {
+				errs[i] = validation_err;
+
+				/* only keep the error messages of longest
+				 * matches */
+				if (i > max_match_len) {
+					max_match_len = i;
 					for (size_t j = 0;
 					     j < MAX_ALTERNATIVE_COUNT;
 					     j++) {
@@ -285,6 +255,8 @@ mas_err_t *thumb2_validate(enum inst_opcode op,
 					}
 				}
 
+				/* do not validate the rest, continue with the
+				 * next alternative */
 				break;
 			}
 		}
