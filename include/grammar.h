@@ -36,7 +36,7 @@ typedef size_t mas_grammar_alt_idx_t;
  * @return NULL on sucess, `(void *) -1` if the instruction does not
  *         belong to this grammar, and an error pointer on failure.
  */
-typedef mas_err_t *(*mas_grammar_consume_opcode_method_t)(
+typedef mas_err_t *mas_grammar_consume_opcode_method_t(
 		const char **inst,
 		mas_grammar_opcode_t *out_opcode,
 		void *out_op_seminfo,
@@ -49,37 +49,35 @@ typedef mas_err_t *(*mas_grammar_consume_opcode_method_t)(
  * @param inst Pointer to the remaining instruction string.
  * @param opcode Opcode of the parsed instruction.
  * @param op_seminfo Extra semantic information for the parsed instruction.
- * @param out_lexeme Output buffer for the parsed lexeme.
+ * @param out_arg_lexeme Output buffer for the parsed argument lexeme.
  * @param argp Variable arg list pointer to consume by lexer.
  *
- * @return NULL on success or error pointer on failure.
+ * @return NULL on success, `(void *) -1` if the instruction fully consumed and
+ *         there is no output, or error pointer on failure.
  */
-typedef mas_err_t *(*mas_grammar_consume_arg_method_t)(
+typedef mas_err_t *mas_grammar_consume_arg_method_t(
 		const char **inst,
 		mas_grammar_opcode_t opcode,
 		const void *op_seminfo,
-		void *out_lexeme,
+		void *out_arg_lexeme,
 		va_list argp,
 		struct mas_extension_get_data *);
 
 /**
  * @brief Validate a lexeme and convert it into an argument.
  *
- * Validates lexeme against `param` and `arg_idx`, return resulting
- * argument via `out_arg`.
+ * Validates lexeme against `param`, return resulting argument via `out_arg`.
  *
- * @param lexeme Lexeme to validate.
+ * @param arg_lexeme Lexeme to parse and validate.
  * @param param_id Parameter identifier to check lexeme with.
- * @param arg_idx Index of the lexeme in arguments.
  * @param out_arg Output buffer for the produced argument.
  *
  * @return NULL on sucess, `(void *) -1` if the lexeme does not produce
  *         a token, and an error pointer on failure.
  */
-typedef mas_err_t *(*mas_grammar_validate_arg_method_t)(
-		const void *lexeme,
+typedef mas_err_t *mas_grammar_validate_arg_method_t(
+		const void *arg_lexeme,
 		mas_grammar_param_id_t param_id,
-		size_t arg_idx,
 		void *out_arg,
 		struct mas_extension_get_data *);
 
@@ -93,15 +91,15 @@ typedef mas_err_t *(*mas_grammar_validate_arg_method_t)(
  *
  * @return NULL on succes and an error pointer on failure.
  */
-typedef mas_err_t *(*mas_grammar_emit_method_t)(
+typedef mas_err_t *mas_grammar_emit_method_t(
 		mas_grammar_opcode_t opcode,
 		const void *args,
 		mas_grammar_alt_idx_t alt_idx,
-		char *out,
+		void *out,
 		struct mas_extension_get_data *);
 
 /** @brief Returns size of the instruction in bytes. */
-typedef size_t (*mas_grammar_get_inst_size_method_t)(
+typedef size_t mas_grammar_get_inst_size_method_t(
 		mas_grammar_opcode_t opcode,
 		const void *args,
 		mas_grammar_alt_idx_t alt_idx,
@@ -139,19 +137,38 @@ struct mas_grammar {
 	/** @brief Regex for the grammar. */
 	const struct mas_grammar_symbol *grammar;
 
+	/** @brief Number of intructions in the grammar table. 1st dimension
+	 * of the grammar table. */
+	size_t inst_count;
+	/** @brief Maximum count of alternatives that an instruction could
+	 * have. 2nd dimension of the grammar table. */
+	size_t max_alt_count;
+	/** @brief Maximum size of an alternative. 3rd dimension of the grammar
+	 * table.*/
+	size_t max_alt_size;
+
+	/** @brief Size of extra semantic information buffer for opcode. Can
+	 * be zero. */
+	size_t sizeof_op_seminfo;
+	/** @brief Size of the argument output by the lexer. Cannot be zero. */
+	size_t sizeof_arg_lexeme;
+	/** @brief Size of the argument parsed by the validator. Cannot be
+	 * zero. */
+	size_t sizeof_arg;
+
 	/** @brief Function pointer for consuming the opcode from instruction
 	 * string. */
-	mas_grammar_consume_opcode_method_t consume_opcode;
+	mas_grammar_consume_opcode_method_t *consume_opcode;
 	/** @brief Fuction pointer for consuming an argument from the remaining
 	 * part of instruction. */
-	mas_grammar_consume_arg_method_t consume_arg;
+	mas_grammar_consume_arg_method_t *consume_arg;
 	/** @brief Funciton pointer for validating an argument. */
-	mas_grammar_validate_arg_method_t validate_arg;
+	mas_grammar_validate_arg_method_t *validate_arg;
 	/** @brief Funciton pointer for emitting machine code. */
-	mas_grammar_emit_method_t emit;
+	mas_grammar_emit_method_t *emit;
 	/** @brief Function pointer for querying machine code size of an
 	 * instruction. */
-	mas_grammar_emit_method_t get_inst_size;
+	mas_grammar_get_inst_size_method_t *get_inst_size;
 };
 
 

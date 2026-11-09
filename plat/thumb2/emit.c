@@ -1,6 +1,9 @@
+#include "detail/methods.h"
 #include "detail/opcodes.h"
 
+#include "../../include/grammar.h"
 #include "../../src/binary-literal.h"
+#include "../../src/common.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -21,16 +24,21 @@
 	} while (0)
 
 
-void thumb2_inst_emit(void *out, const struct inst *inst)
+mas_err_t *thumb2_emit(
+		mas_grammar_opcode_t opcode_,
+		const void *args_,
+		mas_grammar_alt_idx_t alt_idx,
+		void *out,
+		_unused struct mas_extension_get_data *ge)
 {
-	size_t alt_idx = inst->alt_idx;
-	const union inst_arg_data *args = inst->args;
+	enum inst_opcode opcode = opcode_;
+	const union inst_arg *args = args_;
 
 	uint32_t bytes = 0;
-	bool is_32_bit = thumb2_inst_size(inst) == 4;
+	bool is_32_bit = thumb2_get_inst_size(opcode_, args_, alt_idx, ge) == 4;
 	uint32_t write_offset = 0;
 
-	switch (inst->opcode) {
+	switch (opcode) {
 	case OP_ADCS:
 		switch (alt_idx) {
 		case 0:
@@ -678,13 +686,19 @@ void thumb2_inst_emit(void *out, const struct inst *inst)
 		*addr = (uint16_t) bytes;
 		*(addr + 1) = (uint16_t) (bytes >> 16);
 	}
+
+	return NULL;
 }
 
-size_t thumb2_inst_size(const struct inst *inst)
+size_t thumb2_get_inst_size(
+		mas_grammar_opcode_t opcode_,
+		_unused const void *args,
+		mas_grammar_alt_idx_t alt_idx,
+		_unused struct mas_extension_get_data *ge)
 {
-	size_t alt_idx = inst->alt_idx;
+	enum inst_opcode opcode = opcode_;
 
-	switch (inst->opcode) {
+	switch (opcode) {
 	case OP_BL:
 		switch (alt_idx) {
 		case 0:

@@ -7,8 +7,9 @@
 #define MAS_EXTENSION_H
 
 
-#define mas_extension_get_data_fn(ty, fat_pointer) \
-	(ty) (fat_pointer)->method((fat_pointer)->self);
+/** @brief Get data in an extension. */
+#define mas_extension_get_data_fn(ty, fat_pointer, extension_name) \
+	(ty *) (fat_pointer)->method((fat_pointer)->self, extension_name);
 
 
 /** @brief Fat function pointer for getting instruction data. */

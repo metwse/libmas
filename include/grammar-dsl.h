@@ -12,12 +12,16 @@
 
 
 /** @brief A macro to define grammar rule. */
-#define r(...) { { __VA_ARGS__ alt }, { .ty = MAS_GRAMMAR_SYMBOL_PRODUCTIONS_END } }
+#define r(opcode, ...) \
+	[opcode] = { \
+		{ __VA_ARGS__, { .ty = MAS_GRAMMAR_SYMBOL_ALT_END } }, \
+		{ { .ty = MAS_GRAMMAR_SYMBOL_PRODUCTIONS_END } } \
+	}
 
 /** @brief A parameter. */
-#define rparam(param_id) { \
+#define rp(param_id2) { \
 		.ty = MAS_GRAMMAR_SYMBOL_PARAM_ID, \
-		.data.param_id = param_id \
+		.data.param_id = param_id2 \
 	}
 
 /** @brief Zero or more qualifier. */
@@ -48,7 +52,7 @@
 	}
 
 /** @brief Seperates grammar alternatives. */
-#define alt , { .ty = MAS_GRAMMAR_SYMBOL_ALT_END }
+#define alt , { .ty = MAS_GRAMMAR_SYMBOL_ALT_END } }, {
 
 
 #endif

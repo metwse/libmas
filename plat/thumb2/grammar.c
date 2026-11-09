@@ -1,11 +1,11 @@
 #include "detail/opcodes.h"
 #include "detail/grammar.h"
 
-#include <stddef.h>
-#include <stdio.h>
+#include "../../include/grammar-dsl.h"
+#include "../../include/grammar.h"
 
 
-/* (Opcode/mnemonic name map - ORDER OP) */
+/* (Opcode/mnemonic name map - ORDER THUMB2_OP) */
 const char *const thumb2_mnemonics[INST_COUNT] = {
 	"adcs", "adds", "add", "ands", "asrs", "b",
 	"bics", "bkpt", "bl", "blx", "bx", "cmn", "cmp",
@@ -15,242 +15,166 @@ const char *const thumb2_mnemonics[INST_COUNT] = {
 	"str", "strb", "strh", "subs", "sub", "tst", "udf"
 };
 
-/* (Condition suffix name map - ORDER COND) */
+/* (Condition suffix name map - ORDER THUMB2_COND) */
 const char *const thumb2_mnemonic_cond_suffix[COND_SUFFIX_COUNT] = {
 	"eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
 	"hi", "ls", "ge", "lt", "gt", "le", "al",
 };
 
-/* (Debug parameter names - ORDER PARAM) */
-const char *const thumb2_param_names[PARAM_KIND_COUNT] = {
-	"",
+const struct mas_grammar_symbol
+thumb2_grammar[INST_COUNT][MAX_ALT_COUNT + 1][MAX_ALT_SIZE + 1] = {
+		/* register */
+r(OP_ADCS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
 
-	"r0-r7", "r8-r14", "r0-r15", "r0-r13,r15", "r0-r14", "sp", "pc",
+		/* immediate */
+r(OP_ADDS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG), rp(PARAM_IMM3)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_IMM8)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
 
-	"{ r0-r7 }", "{ r0-r7, pc }", "{ r0-r7, lr }",
+r(OP_ADD,	rp(PARAM_NOT_SP_REG), rp(PARAM_ANY_REG)
+		/* SP plus immediate */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_SP), rp(PARAM_IMM8_00)
+	alt	rp(PARAM_SP), rp(PARAM_IMM7_00)
+		/* SP plus register */
+	alt	rp(PARAM_ANY_REG), rp(PARAM_SP)
+	alt	rp(PARAM_SP), rp(PARAM_ANY_REG)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_PC), rp(PARAM_IMM8_00)),
 
-	"#imm3",
-	"#imm5", "#imm5_00",
-	"#imm7_00",
-	"#imm8", "#imm8_0", "#imm8_0_label", "#imm8_00", "#imm8_00_label",
-	"#imm11_0_label",
-	"#imm24_0_label",
+		/* register */
+r(OP_ANDS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
 
-	"!",
-	"[",
-	"<cond>",
-	""
+		/* immediate */
+r(OP_ASRS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG), rp(PARAM_IMM5)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_B,		rp(PARAM_COND), rp(PARAM_SIMM8_0_LABEL)
+	alt	rp(PARAM_SIMM11_0_LABEL)),
+
+		/* register */
+r(OP_BICS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_BKPT,	rp(PARAM_IMM8)),
+
+r(OP_BL,	rp(PARAM_SIMM24_0_LABEL)),
+
+		/* register */
+r(OP_BLX,	rp(PARAM_NOT_PC_REG)),
+
+r(OP_BX,	rp(PARAM_NOT_PC_REG)),
+
+		/* register */
+r(OP_CMN,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+		/* immediate */
+r(OP_CMP,	rp(PARAM_LOW_REG), rp(PARAM_IMM8)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)
+	alt	rp(PARAM_ANY_REG), rp(PARAM_ANY_REG)),
+
+		/* register */
+r(OP_EORS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+		/* load */
+r(OP_LDM,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG_LS)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_EXCL), rp(PARAM_LOW_REG_LS)),
+		/* immediate */
+r(OP_LDR,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_IMM5_00)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_SP)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_SP), rp(PARAM_IMM8_00)
+		/* literal */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_IMM8_00_LABEL)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_PC), rp(PARAM_IMM8_00)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+		/* immediate */
+r(OP_LDRB,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_IMM5)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+		/* immediate */
+r(OP_LDRH,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_IMM5)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_LDRSB,	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+r(OP_LDRSH,	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+		/* immediate */
+r(OP_LSLS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG), rp(PARAM_IMM5)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+		/* immediate */
+r(OP_LSRS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG), rp(PARAM_IMM5)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_MOV,	rp(PARAM_ANY_REG), rp(PARAM_ANY_REG)),
+		/* immediate */
+r(OP_MOVS,	rp(PARAM_LOW_REG), rp(PARAM_IMM8)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_MULS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+		/* register */
+r(OP_MVNS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_NEGS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_NOP, 	rp(PARAM_NOPARAM)),
+
+		/* register */
+r(OP_ORRS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_POP,	rp(PARAM_POP_REG_LS)),
+r(OP_PUSH,	rp(PARAM_PUSH_REG_LS)),
+
+		/* register */
+r(OP_RORS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+		/* register */
+r(OP_RSBS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG), rp(PARAM_IMM0)),
+r(OP_SBCS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_SEV, 	rp(PARAM_NOPARAM)),
+
+		/* store */
+r(OP_STM,	rp(PARAM_LOW_REG), rp(PARAM_EXCL), rp(PARAM_LOW_REG_LS)),
+		/* immediate */
+r(OP_STR,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_IMM5)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_SP)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_SP), rp(PARAM_IMM8_00)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+		/* immediate */
+r(OP_STRB,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_IMM5)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+		/* immediate */
+r(OP_STRH,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_IMM5)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_BRACE), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+		/* immediate */
+r(OP_SUBS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG), rp(PARAM_IMM3)
+	alt	rp(PARAM_LOW_REG), rp(PARAM_IMM8)
+		/* register */
+	alt	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+		/* rp(SP) minus immediate */
+r(OP_SUB,	rp(PARAM_SP), rp(PARAM_SP), rp(PARAM_IMM7_00)),
+
+		/* register */
+r(OP_TST,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
+
+r(OP_UDF,	rp(PARAM_IMM8)
+	alt	rp(PARAM_NOPARAM)),
 };
-
-/* Instructions are represented as:
- * <mnemonic><mnemonic_cond_suffix> <parameters...>
- *
- * An instruction can have conditional execution mode IF its first parameter
- * is PARAM_COND. */
-
-const enum inst_param
-thumb2_inst_params[INST_COUNT][MAX_ALTERNATIVE_COUNT + 1][MAX_PARAM_COUNT + 1] = {
-			/* register */
-	[OP_ADCS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-			/* immediate */
-	[OP_ADDS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG, PARAM_IMM3 } ,
-			{ PARAM_LOW_REG, PARAM_IMM8 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_ADD] = {	{ PARAM_NOT_SP_REG, PARAM_ANY_REG },
-			/* SP plus immediate */
-			{ PARAM_LOW_REG, PARAM_SP, PARAM_IMM8_00 },
-			{ PARAM_SP, PARAM_IMM7_00 },
-			/* SP plus register */
-			{ PARAM_ANY_REG, PARAM_SP },
-			{ PARAM_SP, PARAM_ANY_REG },
-			{ PARAM_LOW_REG, PARAM_PC, PARAM_IMM8_00 } },
-
-			/* register */
-	[OP_ANDS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-			/* immediate */
-	[OP_ASRS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG, PARAM_IMM5 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_B] = {	{ PARAM_COND, PARAM_SIMM8_0_LABEL },
-			{ PARAM_SIMM11_0_LABEL } },
-
-			/* register */
-	[OP_BICS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_BKPT] = {	{ PARAM_IMM8 } },
-
-	[OP_BL] = {	{ PARAM_SIMM24_0_LABEL } },
-
-			/* register */
-	[OP_BLX] = {	{ PARAM_NOT_PC_REG } },
-
-	[OP_BX] = {	{ PARAM_NOT_PC_REG } },
-
-			/* register */
-	[OP_CMN] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-			/* immediate */
-	[OP_CMP] = {	{ PARAM_LOW_REG, PARAM_IMM8 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_LOW_REG },
-			{ PARAM_ANY_REG, PARAM_ANY_REG } },
-
-			/* register */
-	[OP_EORS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-			/* load */
-	[OP_LDM] = {	{ PARAM_LOW_REG, PARAM_LOW_REG_LS },
-			{ PARAM_LOW_REG, PARAM_EXCL, PARAM_LOW_REG_LS }, },
-			/* immediate */
-	[OP_LDR] = {	{ PARAM_LOW_REG, PARAM_LOW_REG },
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_IMM5_00 },
-			{ PARAM_LOW_REG, PARAM_SP },
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_SP, PARAM_IMM8_00 },
-			/* literal */
-			{ PARAM_LOW_REG, PARAM_IMM8_00_LABEL },
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_PC, PARAM_IMM8_00 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_LOW_REG } },
-
-			/* immediate */
-	[OP_LDRB] = {	{ PARAM_LOW_REG, PARAM_LOW_REG },
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_IMM5 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_LOW_REG } },
-			/* immediate */
-	[OP_LDRH] = {	{ PARAM_LOW_REG, PARAM_LOW_REG },
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_IMM5 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_LDRSB] = {	{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_LOW_REG } },
-	[OP_LDRSH] = {	{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_LOW_REG } },
-
-			/* immediate */
-	[OP_LSLS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG, PARAM_IMM5 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_LOW_REG } },
-			/* immediate */
-	[OP_LSRS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG, PARAM_IMM5 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_MOV] = {	{ PARAM_ANY_REG, PARAM_ANY_REG } },
-			/* immediate */
-	[OP_MOVS] = {	{ PARAM_LOW_REG, PARAM_IMM8 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_MULS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-			/* register */
-	[OP_MVNS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_NEGS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_NOP] = { 	{ PARAM_NOPARAM } },
-
-			/* register */
-	[OP_ORRS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_POP] = {	{ PARAM_POP_REG_LS } },
-	[OP_PUSH] = {	{ PARAM_PUSH_REG_LS } },
-
-			/* register */
-	[OP_RORS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-			/* register */
-	[OP_RSBS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG },
-			{ PARAM_LOW_REG, PARAM_LOW_REG, PARAM_IMM0 } },
-	[OP_SBCS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_SEV] = { 	{ PARAM_NOPARAM } },
-
-			/* store */
-	[OP_STM] = {	{ PARAM_LOW_REG, PARAM_EXCL, PARAM_LOW_REG_LS } },
-			/* immediate */
-	[OP_STR] = {	{ PARAM_LOW_REG, PARAM_LOW_REG },
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_IMM5 },
-			{ PARAM_LOW_REG, PARAM_SP },
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_SP, PARAM_IMM8_00 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_LOW_REG } },
-
-			/* immediate */
-	[OP_STRB] = {	{ PARAM_LOW_REG, PARAM_LOW_REG },
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_IMM5 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_LOW_REG } },
-			/* immediate */
-	[OP_STRH] = {	{ PARAM_LOW_REG, PARAM_LOW_REG },
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_IMM5 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_BRACE, PARAM_LOW_REG, PARAM_LOW_REG } },
-
-			/* immediate */
-	[OP_SUBS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG, PARAM_IMM3 },
-			{ PARAM_LOW_REG, PARAM_IMM8 },
-			/* register */
-			{ PARAM_LOW_REG, PARAM_LOW_REG, PARAM_LOW_REG } },
-			/* SP minus immediate */
-	[OP_SUB] = {	{ PARAM_SP, PARAM_SP, PARAM_IMM7_00 } },
-
-			/* register */
-	[OP_TST] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
-
-	[OP_UDF] = {	{ PARAM_IMM8 },
-			{ PARAM_NOPARAM } },
-};
-
-
-void thumb2_dump_grammar(void)
-{
-	for (size_t inst = 0;
-	     inst < INST_COUNT;
-	     inst++) {
-		for (size_t alt = 0; thumb2_inst_params[inst][alt][0]; alt++) {
-			size_t i = 0;
-#define cur_param thumb2_inst_params[inst][alt][i]
-#define next_param thumb2_inst_params[inst][alt][i + 1]
-
-			if (cur_param == PARAM_COND) {
-				printf("%s<cond> ", thumb2_mnemonics[inst]);
-				i++;
-			} else {
-				printf("%s ", thumb2_mnemonics[inst]);
-			}
-
-			size_t brace_count = 0;
-			for (;
-			     cur_param != PARAME;
-			     i++) {
-				if (next_param != PARAME &&
-				    (cur_param == PARAM_EXCL || (
-					(is_reg(cur_param) || is_imm(cur_param)) &&
-					(next_param != PARAM_EXCL))
-				    )) {
-					printf("%s, ",
-					       thumb2_param_names[cur_param]);
-				} else if (cur_param == PARAM_BRACE) {
-					printf("[");
-					brace_count++;
-				} else if (next_param == PARAME || next_param == PARAM_EXCL) {
-					printf("%s",
-					       thumb2_param_names[cur_param]);
-				} else {
-					printf("%s ",
-					       thumb2_param_names[cur_param]);
-				}
-			}
-
-			while (brace_count--)
-				printf("]");
-
-			printf("\n");
-		}
-	}
-}

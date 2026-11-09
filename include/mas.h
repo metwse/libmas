@@ -40,7 +40,7 @@ void mas_deinit_lib(void);
 struct mas *mas_xnew(void);
 
 /** @brief Frees the resources owned by the assembler. */
-struct mas *mas_destroy(void);
+void mas_destroy(struct mas *);
 
 /** @brief Add an extension to the assembler. */
 void mas_xpush_extension(const struct mas_extension *);

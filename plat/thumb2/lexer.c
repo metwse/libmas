@@ -1,15 +1,17 @@
 #include "detail/grammar.h"
-#include "detail/static-init.h"
+#include "detail/methods.h"
 #include "detail/opcodes.h"
+#include "detail/static-init.h"
 
+#include "../../include/error.h"
+#include "../../include/error.h"
 #include "../../src/common.h"
 #include "../../src/error.h"
 
-#include <ctype.h>
-#include <inttypes.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include <inttypes.h>
+#include <ctype.h>
 
 
 #define T char, enum inst_opcode, mnemonic_name
@@ -34,8 +36,14 @@ void thumb2_lexer_static_destroy(void)
 	fhmap_mnemonic_name_destroy(&mnemonic_name_map);
 }
 
-mas_err_t *thumb2_consume_mnemonic(const char **inst, enum inst_opcode *out)
+mas_err_t *thumb2_consume_opcode(
+		const char **inst,
+		mas_grammar_opcode_t *out_opcode,
+		_unused void *out_op_seminfo,
+		_unused struct mas_extension_get_data *ge)
 {
+	enum inst_opcode *out = out_opcode;
+
 	size_t opcode_len = 0;
 	for (; isalnum((*inst)[opcode_len]); opcode_len++)
 		;
@@ -70,7 +78,7 @@ mas_err_t *thumb2_consume_mnemonic(const char **inst, enum inst_opcode *out)
 	return_err(inv_mnemonic, "Invalid mnemonic!", mnemonic_str);
 }
 
-mas_err_t *thumb2_consume_arg_reg_tk(const char **inst, uint32_t *out)
+static mas_err_t *thumb2_consume_arg_reg_lexeme(const char **inst, uint32_t *out)
 {
 	switch ((*inst)[0]) {
 	case 'r': {
@@ -106,32 +114,26 @@ mas_err_t *thumb2_consume_arg_reg_tk(const char **inst, uint32_t *out)
 	return_err(inv_value, "Invalid register (r0-12,sp,lr,pc).", 0, 15, 0);
 }
 
-mas_err_t *thumb2_consume_arg_tk(const char **inst,
-				 bool first,
-				 struct inst_arg_tk *out)
+static mas_err_t *thumb2_consume_arg_lexeme(const char **inst,
+					    struct inst_arg_lexeme *out)
 {
 	const char *start = *inst;
 
 	if ((*inst)[0] == '\0')
-		return_ok((struct inst_arg_tk) { .ty = ARG_TK_END });
+		return_ok((struct inst_arg_lexeme) { .ty = ARG_LEX_END });
 
 	/* cond suffix */
-	if (isalpha(start[0]) && first) {
+	if (isalpha(start[0])) {
 		if (strlen(start) >= 2 && isalpha(start[1]))
 			for (size_t i = 0; i < COND_AL + 1; i++)
 				if (start[0] == thumb2_mnemonic_cond_suffix[i][0] &&
 				    start[1] == thumb2_mnemonic_cond_suffix[i][1]) {
 					*inst += 2;
-					return_ok((struct inst_arg_tk) {
-						.ty = ARG_TK_COND,
-						.seminfo.parsed.cond_suffix = i
+					return_ok((struct inst_arg_lexeme) {
+						.ty = ARG_LEX_COND,
+						.seminfo.cond_suffix = i
 					});
 				}
-
-		char cond_suffix[3] = { start[0], start[1], '\0' };
-		return_err(inv_mnemonic,
-			   "Invalid condition suffix!",
-			   cond_suffix);
 	}
 
 	while (isspace((*inst)[0]) || (*inst)[0] == ',' || (*inst)[0] == ']')
@@ -142,9 +144,9 @@ mas_err_t *thumb2_consume_arg_tk(const char **inst,
 		(*inst)++;
 		intmax_t simm = strtoimax(*inst, (char **) inst, 0);
 
-		return_ok((struct inst_arg_tk) {
-			.ty = ARG_TK_IMM,
-			.seminfo.parsed.simm = simm
+		return_ok((struct inst_arg_lexeme) {
+			.ty = ARG_LEX_IMM,
+			.seminfo.simm = simm
 		});
 	}
 	case 'r':
@@ -152,11 +154,11 @@ mas_err_t *thumb2_consume_arg_tk(const char **inst,
 	case 'l':
 	case 'p': {  /* collect reg */
 		uint32_t reg;
-		return_try(thumb2_consume_arg_reg_tk(inst, &reg));
+		return_try(thumb2_consume_arg_reg_lexeme(inst, &reg));
 
-		return_ok((struct inst_arg_tk) {
-			.ty = ARG_TK_REG,
-			.seminfo.parsed.reg = reg
+		return_ok((struct inst_arg_lexeme) {
+			.ty = ARG_LEX_REG,
+			.seminfo.reg = reg
 		});
 	}
 
@@ -169,7 +171,7 @@ mas_err_t *thumb2_consume_arg_tk(const char **inst,
 
 		while ((*inst)[0] != '}') {
 			uint32_t reg;
-			return_try(thumb2_consume_arg_reg_tk(inst, &reg));
+			return_try(thumb2_consume_arg_reg_lexeme(inst, &reg));
 
 			while (isspace((*inst)[0]) || (*inst)[0] == ',')
 				(*inst)++;
@@ -192,9 +194,9 @@ mas_err_t *thumb2_consume_arg_tk(const char **inst,
 
 		(*inst)++;  /* consume the } */
 
-		return_ok((struct inst_arg_tk) {
-			.ty = ARG_TK_REG_LS,
-			.seminfo.parsed.reg_ls = reg_ls
+		return_ok((struct inst_arg_lexeme) {
+			.ty = ARG_LEX_REG_LS,
+			.seminfo.reg_ls = reg_ls
 		});
 	}
 
@@ -202,13 +204,13 @@ mas_err_t *thumb2_consume_arg_tk(const char **inst,
 		*inst += 2;  /* collect %x */
 		switch ((*inst)[-1]) {
 		case 'r':
-			return_ok((struct inst_arg_tk) { .ty = ARG_TK_REG_VA_NUM });
+			return_ok((struct inst_arg_lexeme) { .ty = ARG_LEX_REG_VA_NUM });
 		case 'R':
-			return_ok((struct inst_arg_tk) { .ty = ARG_TK_REG_VA_STR });
+			return_ok((struct inst_arg_lexeme) { .ty = ARG_LEX_REG_VA_STR });
 		case 'l':
-			return_ok((struct inst_arg_tk) { .ty = ARG_TK_REG_LS_VA });
+			return_ok((struct inst_arg_lexeme) { .ty = ARG_LEX_REG_LS_VA });
 		case 'i':
-			return_ok((struct inst_arg_tk) { .ty = ARG_TK_IMM_VA });
+			return_ok((struct inst_arg_lexeme) { .ty = ARG_LEX_IMM_VA });
 		default:
 			return_err(syntax, "Invalid placeholder for %.");
 		}
@@ -216,16 +218,60 @@ mas_err_t *thumb2_consume_arg_tk(const char **inst,
 
 	case '[':  /* collect brace */
 		(*inst)++;
-		return_ok((struct inst_arg_tk) { .ty = ARG_TK_BRACE });
+		return_ok((struct inst_arg_lexeme) { .ty = ARG_LEX_BRACE });
 	case '!':  /* excl */
 		(*inst)++;
-		return_ok((struct inst_arg_tk) { .ty = ARG_TK_EXCL });
+		return_ok((struct inst_arg_lexeme) { .ty = ARG_LEX_EXCL });
 	case '\0':  /* end */
-		return_ok((struct inst_arg_tk) { .ty = ARG_TK_END });
+		return_ok((struct inst_arg_lexeme) { .ty = ARG_LEX_END });
 
 	default:
 		return_err(syntax, "Invalid char at input stream.");
 	}
 
 	_unreachable;
+}
+
+mas_err_t *thumb2_consume_arg(
+		const char **inst,
+		_unused mas_grammar_opcode_t opcode,
+		_unused const void *op_seminfo,
+		void *out_arg_lexeme,
+		va_list argp,
+		_unused struct mas_extension_get_data *ge)
+{
+	struct inst_arg_lexeme *out = out_arg_lexeme;
+
+	struct inst_arg_lexeme arg_lexeme;
+	return_try(thumb2_consume_arg_lexeme(inst, &arg_lexeme));
+
+	switch (arg_lexeme.ty) {
+	case ARG_LEX_REG_VA_STR:
+		arg_lexeme.ty = ARG_LEX_REG;
+		return_try(thumb2_consume_arg_reg_lexeme(
+			   &(const char *) { va_arg(argp, char *) },
+			   &arg_lexeme.seminfo.reg));
+		break;
+
+	case ARG_LEX_REG_VA_NUM:
+		arg_lexeme.ty = ARG_LEX_REG;
+		arg_lexeme.seminfo.reg = va_arg(argp, int);
+		break;
+
+	case ARG_LEX_REG_LS_VA:
+		arg_lexeme.ty = ARG_LEX_REG_LS;
+		arg_lexeme.seminfo.reg_ls.reg_ls = va_arg(argp, int);
+		break;
+
+	case ARG_LEX_IMM_VA:
+		arg_lexeme.ty = ARG_LEX_IMM;
+		arg_lexeme.seminfo.imm = va_arg(argp, int);
+		break;
+
+	default:
+		break;
+	}
+
+	*out = arg_lexeme;
+	return arg_lexeme.ty == ARG_LEX_END ? (void *) -1 : NULL;
 }

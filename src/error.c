@@ -49,7 +49,7 @@ void mas_err_free(mas_err_t *err)
 
 void mas_err_unwrap(mas_err_t *err)
 {
-	if (err == NULL)
+	if (err == NULL || err == (void *) -1)
 		return;
 
 	mas_err_message(err, stderr);
