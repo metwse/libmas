@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-/* (Opcode/mnemonic name map - ORDER OP) */
+/* (Opcode/mnemonic name map - ORDER THUMB2_OP) */
 const char *const thumb2_mnemonics[INST_COUNT] = {
 	"adcs", "adds", "add", "ands", "asrs", "b",
 	"bics", "bkpt", "bl", "blx", "bx", "cmn", "cmp",
@@ -15,13 +15,13 @@ const char *const thumb2_mnemonics[INST_COUNT] = {
 	"str", "strb", "strh", "subs", "sub", "tst", "udf"
 };
 
-/* (Condition suffix name map - ORDER COND) */
+/* (Condition suffix name map - ORDER THUMB2_COND) */
 const char *const thumb2_mnemonic_cond_suffix[COND_SUFFIX_COUNT] = {
 	"eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
 	"hi", "ls", "ge", "lt", "gt", "le", "al",
 };
 
-/* (Debug parameter names - ORDER PARAM) */
+/* (Debug parameter names - ORDER THUMB2_PARAM) */
 const char *const thumb2_param_names[PARAM_KIND_COUNT] = {
 	"",
 
@@ -49,7 +49,7 @@ const char *const thumb2_param_names[PARAM_KIND_COUNT] = {
  * is PARAM_COND. */
 
 const enum inst_param
-thumb2_inst_params[INST_COUNT][MAX_ALTERNATIVE_COUNT + 1][MAX_PARAM_COUNT + 1] = {
+thumb2_inst_params[INST_COUNT][MAX_INST_ALT_COUNT + 1][MAX_PARAM_COUNT + 1] = {
 			/* register */
 	[OP_ADCS] = {	{ PARAM_LOW_REG, PARAM_LOW_REG } },
 

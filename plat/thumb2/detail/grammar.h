@@ -39,6 +39,9 @@ struct inst_arg_tk {
 };
 
 
+#define MAX_INST_ALT_COUNT 9
+#define MAX_PARAM_COUNT 4
+
 _masi const char *const thumb2_mnemonics[INST_COUNT];
 _masi const char *const thumb2_mnemonic_cond_suffix[COND_SUFFIX_COUNT];
 
@@ -47,7 +50,15 @@ _masi const char *const thumb2_param_names[PARAM_KIND_COUNT];
 
 /* Instruction-parameter table, for assembly syntax. */
 _masi const enum inst_param
-thumb2_inst_params[INST_COUNT][MAX_ALTERNATIVE_COUNT + 1][MAX_PARAM_COUNT + 1];
+thumb2_inst_params[INST_COUNT][MAX_INST_ALT_COUNT + 1][MAX_PARAM_COUNT + 1];
+
+#define MAX_DIR_ALT_COUNT 3
+
+_masi const char *const thumb2_dirs[DIR_COUNT];
+
+/* Directive-parameter table, for assembly syntax. */
+_masi const enum dir_param
+thumb2_dir_params[DIR_COUNT][MAX_DIR_ALT_COUNT + 1][MAX_FIXED_PARAM_COUNT + 1];
 
 
 /* Prints assembler grammar, for development debug. */

@@ -10,14 +10,12 @@
 
 
 #define MAX_PARAM_COUNT 4
-#define MAX_ALTERNATIVE_COUNT 9
-
-/* (Number of opcodes - ORDER OP) */
+/* (Number of opcodes - ORDER THUMB2_OP) */
 #define INST_COUNT (OP_UDF + 1)
-/* (Number of condition suffixes - ORDER COND) */
+/* (Number of condition suffixes - ORDER THUMB2_COND) */
 #define COND_SUFFIX_COUNT (COND_AL + 1)
 
-/* (Number of parameter kinds and their reg, reg_ls, imm ranges - ORDER PARAM) */
+/* (Number of parameter kinds and their reg, reg_ls, imm ranges - ORDER THUMB2_PARAM) */
 #define PARAM_KIND_COUNT (PARAM_NOPARAM + 1)
 #define is_reg(param) \
 	((param) >= PARAM_LOW_REG && (param) <= PARAM_PC)
@@ -27,7 +25,7 @@
 	((param) >= PARAM_IMM0 && (param) <= PARAM_SIMM24_0_LABEL)
 
 
-enum inst_opcode {  // GREP "ORDER OP" if you change this enum
+enum inst_opcode {  // GREP "ORDER THUMB2_OP" if you change this enum
 	OP_ADCS, OP_ADDS, OP_ADD, OP_ANDS, OP_ASRS, OP_B,
 	OP_BICS, OP_BKPT, OP_BL, OP_BLX, OP_BX, OP_CMN, OP_CMP,
 	OP_EORS, OP_LDM, OP_LDR, OP_LDRB, OP_LDRH, OP_LDRSB, OP_LDRSH,
@@ -37,13 +35,13 @@ enum inst_opcode {  // GREP "ORDER OP" if you change this enum
 };
 
 /* Conditional execution flags. */
-enum inst_cond {  // GREP "ORDER COND" if you change this enum
+enum inst_cond {  // GREP "ORDER THUMB2_COND" if you change this enum
 	COND_EQ, COND_NE, COND_CS, COND_CC, COND_MI, COND_PL, COND_VS, COND_VC,
 	COND_HI, COND_LS, COND_GE, COND_LT, COND_GT, COND_LE, COND_AL,
 };
 
 /* Instruction parameters. */
-enum inst_param {  // GREP "ORDER PARAM" if you change this enum
+enum inst_param {  // GREP "ORDER THUMB2_PARAM" if you change this enum
 	PARAME = 0,  /* end of argument list */
 
 	PARAM_LOW_REG,  /* r0-r7 */
@@ -77,7 +75,7 @@ enum inst_param {  // GREP "ORDER PARAM" if you change this enum
 struct inst {
 	enum inst_opcode opcode;
 
-	size_t alt_idx;  /* alternative index in format table */
+	size_t alt_idx;
 
 	union inst_arg_data {
 		enum inst_arg_data_reg {
@@ -104,6 +102,43 @@ struct inst {
 
 		enum inst_cond cond_suffix;
 	} args[MAX_PARAM_COUNT];
+};
+
+#define MAX_FIXED_PARAM_COUNT 4
+/* (Number of directives - ORDER THUMB2_DIR_TY) */
+#define DIR_COUNT (DIR_TY_WORD + 1)
+
+enum dir_ty {  // GREP "ORDER THUMB2_DIR_TY" if you change this enum.
+	DIR_TY_LABEL, DIR_TY_ALIGN,
+	DIR_TY_BYTE, DIR_TY_HWORD, DIR_TY_WORD,
+};
+
+/* Instruction parameters. */
+enum dir_param {  // GREP "ORDER THUMB2_DIR_PARAM"
+	DIR_PARAME = 0,
+	DIR_PARAM_UINT  /* non-negative integer */,
+	DIR_PARAM_BYTE,
+	DIR_PARAM_HWORD  /* half word */,
+	DIR_PARAM_WORD,
+	DIR_PARAM_LABEL,
+};
+
+/* Assembler directives. */
+struct dir {
+	enum dir_ty ty;
+
+	size_t alt_idx;
+	size_t arg_count;
+
+	union dir_arg_data {
+		uintmax_t uint;
+
+		uint8_t byte;
+		uint16_t hword;
+		uint32_t word;
+
+		size_t label_id;
+	} *args;
 };
 
 

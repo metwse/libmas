@@ -231,13 +231,13 @@ mas_err_t *thumb2_validate(enum inst_opcode op,
 			   const struct inst_arg_tk *args,
 			   struct inst *out)
 {
-	mas_err_t *errs[MAX_ALTERNATIVE_COUNT] = { 0 };
+	mas_err_t *errs[MAX_INST_ALT_COUNT] = { 0 };
 	size_t max_match_len = 0;
 
 	struct inst res = { .opcode = op, .alt_idx = 0, };
 
 	/* iterate through all of the alternative encodings */
-	for (; res.alt_idx < MAX_ALTERNATIVE_COUNT; res.alt_idx++) {
+	for (; res.alt_idx < MAX_INST_ALT_COUNT; res.alt_idx++) {
 		if (thumb2_inst_params[res.opcode][res.alt_idx][0] == PARAME)
 			break;
 
@@ -245,7 +245,7 @@ mas_err_t *thumb2_validate(enum inst_opcode op,
 		for (size_t i = 0; i < MAX_PARAM_COUNT + 1; i++) {
 			if ((cur_param == PARAME && args[i].ty == ARG_TK_END) ||
 			    (cur_param == PARAM_NOPARAM && i == 0)) {
-				for (size_t i = 0; i < MAX_ALTERNATIVE_COUNT; i++)
+				for (size_t i = 0; i < MAX_INST_ALT_COUNT; i++)
 					if (errs[i])
 						mas_err_free(errs[i]);
 				return_ok(res);
@@ -263,7 +263,7 @@ mas_err_t *thumb2_validate(enum inst_opcode op,
 				if (i > max_match_len) {
 					max_match_len = i;
 					for (size_t j = 0;
-					     j < MAX_ALTERNATIVE_COUNT;
+					     j < MAX_INST_ALT_COUNT;
 					     j++) {
 						if (i != j && errs[j]) {
 							mas_err_free(errs[j]);
@@ -280,7 +280,7 @@ mas_err_t *thumb2_validate(enum inst_opcode op,
 	}
 
 	mas_err_t *err = err_xnew_list("Invalid instruction.");
-	for (size_t i = 0; i < MAX_ALTERNATIVE_COUNT; i++)
+	for (size_t i = 0; i < MAX_INST_ALT_COUNT; i++)
 		if (errs[i])
 			err_push(err, errs[i]);
 
