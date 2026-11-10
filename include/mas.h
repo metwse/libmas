@@ -6,6 +6,7 @@
 #ifndef MAS_H
 #define MAS_H
 
+#include "detail.h"
 #include "error.h"
 
 #include <stddef.h>
@@ -43,10 +44,10 @@ struct mas *mas_xnew(void);
 void mas_destroy(struct mas *);
 
 /** @brief Add an extension to the assembler. */
-void mas_xpush_extension(const struct mas_extension *);
+void mas_xpush_extension(struct mas *, const struct mas_extension *);
 
 /** @brief Add a grammar to the assembler. */
-void mas_xpush_grammar(const struct mas_grammar *);
+void mas_xpush_grammar(struct mas *, const struct mas_grammar *);
 
 
 /* --- mas_handle methods --- */
@@ -58,13 +59,16 @@ struct mas_handle *mas_xstart(const struct mas *mas);
 void mas_handle_destroy(struct mas_handle *mas_handle);
 
 /** @brief Feed the assembler with an instruction. */
-mas_err_t *mas_handle_xfeed(const struct mas_handle *mas_handle,
+mas_err_t *mas_handle_xfeed(struct mas_handle *mas_handle,
 			    const char *inst_string,
-			    ...);
+			    ...) _mas_wur;
+
+/* Similar to mas_handle_xfeed, but raises an error in case of failure. */
+void mas_handle_yxfeed(struct mas_handle *mas_handle, const char *inst, ...);
 
 /** @brief Produce the machine code output. */
 mas_err_t *mas_handle_finalize_and_destroy(struct mas_handle *mas_handle,
-					   char *out);
+					   char *out) _mas_wur;
 
 /** @brief Query required size for the machine code. */
 size_t mas_handle_get_output_size(const struct mas_handle *mas_handle);

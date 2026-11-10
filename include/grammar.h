@@ -111,8 +111,8 @@ struct mas_grammar_symbol {
 	enum mas_grammar_symbol_ty {
 		MAS_GRAMMAR_SYMBOL_PARAM_ID  /** A parameter is specified. */,
 		MAS_GRAMMAR_SYMBOL_QUALIFICATION  /** A qualification is specified. */,
-		MAS_GRAMMAR_SYMBOL_ALT_END /** End of an alternative. */,
-		MAS_GRAMMAR_SYMBOL_PRODUCTIONS_END /** End of the list of alternatives. */,
+		MAS_GRAMMAR_SYMBOL_PARAMS_END /** End of the list of parameters. */,
+		MAS_GRAMMAR_SYMBOL_ALTS_END /** End of the list of alternatives. */,
 		MAS_GRAMMAR_SYMBOL_NOPARAM /** An alternative with no argument. */,
 	} ty  /** Parameter type. */;
 

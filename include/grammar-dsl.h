@@ -14,8 +14,8 @@
 /** @brief A macro to define grammar rule. */
 #define r(opcode, ...) \
 	[opcode] = { \
-		{ __VA_ARGS__, { .ty = MAS_GRAMMAR_SYMBOL_ALT_END } }, \
-		{ { .ty = MAS_GRAMMAR_SYMBOL_PRODUCTIONS_END } } \
+		{ __VA_ARGS__, { .ty = MAS_GRAMMAR_SYMBOL_PARAMS_END } }, \
+		{ { .ty = MAS_GRAMMAR_SYMBOL_ALTS_END } } \
 	}
 
 /** @brief A parameter. */
@@ -52,7 +52,7 @@
 	}
 
 /** @brief Seperates grammar alternatives. */
-#define alt , { .ty = MAS_GRAMMAR_SYMBOL_ALT_END } }, {
+#define alt , { .ty = MAS_GRAMMAR_SYMBOL_PARAMS_END } }, {
 
 
 #endif
