@@ -24,6 +24,11 @@
 		.data.param_id = param_id2 \
 	}
 
+/** @brief An instruction with no parameter. */
+#define rno_param { \
+		.ty = MAS_GRAMMAR_SYMBOL_NOPARAM \
+	}
+
 /** @brief Zero or more qualifier. */
 #define rzero_or_more(sym) { \
 		.ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \

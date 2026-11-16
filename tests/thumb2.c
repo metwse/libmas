@@ -131,7 +131,8 @@ int main(void)
 	mas_handle_yxfeed(h, "udf #123");
 	mas_handle_yxfeed(h, "udf");
 
-	mas_handle_destroy(h);
+	char asm[mas_handle_get_output_size(h)];
+	mas_err_unwrap(mas_handle_finalize_and_destroy(h, asm));
 
 	mas_destroy(mas);
 	mas_deinit_lib();

@@ -1,4 +1,5 @@
 #include "../include/mas.h"
+#include "../osal/osal.h"
 #include "../plat/thumb2/thumb2.h"
 
 
@@ -56,22 +57,17 @@ int main(void)
 
 	mas_handle_yxfeed(h, "mov pc, lr");
 
-	/*
 	struct mas_execmem e;
-	mas_execmem_xalloc(&e, mas_thumb2_as_output_size(as));
-	mas_thumb2_as_yfinalize(as, e.mem);
+	mas_execmem_xalloc(&e, mas_handle_get_output_size(h));
+	mas_err_unwrap(mas_handle_finalize_and_destroy(h, e.mem));
 
 	mas_execmem_set_mode(&e, MAS_EXECMEM_RE);
-
 	int (*fib_jit)(int) = (int (*)(int)) e.execmem;
 
 	for (int i = 1; i < 10; i++)
 		assert(fib_jit(i) == fib(i));
 
 	mas_execmem_free(&e);
-	*/
-
-	mas_handle_destroy(h);
 
 	mas_destroy(mas);
 	mas_deinit_lib();

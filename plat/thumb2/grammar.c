@@ -125,7 +125,7 @@ r(OP_MVNS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
 
 r(OP_NEGS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
 
-r(OP_NOP, 	rp(PARAM_NOPARAM)),
+r(OP_NOP, 	rno_param),
 
 		/* register */
 r(OP_ORRS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
@@ -141,7 +141,7 @@ r(OP_RSBS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)
 	alt	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG), rp(PARAM_IMM0)),
 r(OP_SBCS,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
 
-r(OP_SEV, 	rp(PARAM_NOPARAM)),
+r(OP_SEV, 	rno_param),
 
 		/* store */
 r(OP_STM,	rp(PARAM_LOW_REG), rp(PARAM_EXCL), rp(PARAM_LOW_REG_LS)),
@@ -176,5 +176,5 @@ r(OP_SUB,	rp(PARAM_SP), rp(PARAM_SP), rp(PARAM_IMM7_00)),
 r(OP_TST,	rp(PARAM_LOW_REG), rp(PARAM_LOW_REG)),
 
 r(OP_UDF,	rp(PARAM_IMM8)
-	alt	rp(PARAM_NOPARAM)),
+	alt	rno_param),
 };

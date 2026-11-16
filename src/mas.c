@@ -8,9 +8,6 @@
 #include <stddef.h>
 
 
-#define aligned_sizeof(ty) \
-	((sizeof(ty) + sizeof(size_t) - 1) / sizeof(size_t) * sizeof(size_t))
-
 /* --- mas methods --- */
 
 struct mas *mas_xnew(void)
@@ -62,7 +59,9 @@ static mas_err_t *mas_handle_xfeed_inner(struct mas_handle *h,
 			    va_list argp)
 {
 	/* TODO: handle multiple grammars */
-	const struct mas_grammar *g = fstack_grammars_at(&h->mas->grammars, 0);
+	size_t grammar_idx = 0;
+	const struct mas_grammar *g = fstack_grammars_at(&h->mas->grammars,
+							 grammar_idx);
 
 	mas_grammar_opcode_t opcode;
 	mas_err_t *res = g->consume_opcode(&inst_string,
@@ -80,7 +79,7 @@ static mas_err_t *mas_handle_xfeed_inner(struct mas_handle *h,
 		void *arg_lexeme = fstack_arg_lexeme_buf_xmultipush(
 				&h->arg_lexemes,
 				NULL,
-				aligned_sizeof(g->sizeof_arg_lexeme));
+				g->sizeof_arg_lexeme);
 
 		mas_err_t *res = g->consume_arg(&inst_string,
 						opcode,
@@ -88,67 +87,110 @@ static mas_err_t *mas_handle_xfeed_inner(struct mas_handle *h,
 						arg_lexeme,
 						argp,
 						NULL /* TODO: extensions */);
-		return_try(res);
+		if (res == NULL)
+			lexeme_count++;
 		if (res == (void *) -1 || inst_string[0] == '\0')
 			break;
-
-		lexeme_count++;
+		return_try(res);
 	}
 
-	void *arg;
-#define new_arg arg = fstack_arg_buf_xmultipush( \
-				&h->args, \
-				NULL, \
-				aligned_sizeof(g->sizeof_arg));
-#define clear_args fstack_arg_buf_clear(&h->args);
 
 #define symbol (*(struct mas_grammar_symbol (*) \
 	[g->inst_count][g->max_alt_count + 1][g->max_alt_size + 1]) g->grammar)\
 	[opcode]
+#define current_symbol (symbol)[alt_idx][symbol_idx]
 
-#define current_symbol (*(struct mas_grammar_symbol (*) \
-	[g->inst_count][g->max_alt_count + 1][g->max_alt_size + 1]) g->grammar)\
-	[opcode][alt_idx][arg_idx]
+	mas_grammar_alt_idx_t alt_idx;
+	size_t symbol_idx;
 
-	mas_grammar_alt_idx_t alt_idx, arg_idx;
 	for (alt_idx = 0;
 	     symbol[alt_idx][0].ty != MAS_GRAMMAR_SYMBOL_ALTS_END;
 	     alt_idx++) {
-		clear_args;
+		char *arg;
+#define new_arg arg = fstack_arg_buf_xmultipush(&h->args, NULL, g->sizeof_arg);
+
+		fstack_arg_buf_clear(&h->args);
 		new_arg;
 
-		for (arg_idx = 0;
-		     current_symbol.ty != MAS_GRAMMAR_SYMBOL_PARAMS_END &&
-			arg_idx < lexeme_count;
-		     arg_idx++) {
-			/* TODO: regex qualifications */
-			const void *arg_lexeme = fstack_arg_lexeme_buf_at(
-					&h->arg_lexemes,
-					aligned_sizeof(g->sizeof_arg_lexeme));
-			void *res = g->validate_arg(
-				arg_lexeme,
-				current_symbol.data.param_id,
-				&arg,
-				NULL /* TODO: extensions */);
+		bool break_for = false;
+		size_t valid_lexeme_count = 0;
 
-			if (res == (void *) -1) {
-				continue;
-			} else if (res) {
-				mas_err_free(res); /* TODO: error reporting. */
-			} else {
-				new_arg;
+		for (symbol_idx = 0; valid_lexeme_count < lexeme_count; symbol_idx++) {
+			switch (current_symbol.ty) {
+			case MAS_GRAMMAR_SYMBOL_PARAMS_END:
+				break_for = true;
+				break;
+
+			case MAS_GRAMMAR_SYMBOL_PARAM_ID: {
+				const char *arg_lexeme = fstack_arg_lexeme_buf_at(
+						&h->arg_lexemes,
+						g->sizeof_arg_lexeme * valid_lexeme_count);
+				void *res = g->validate_arg(arg_lexeme,
+							    current_symbol.data.param_id,
+							    arg,
+							    NULL /* TODO: extensions */);
+
+				if (res == (void *) -1) {
+					/* no argument is produced by the lexeme */
+					valid_lexeme_count++;
+				} else if (res) {
+					mas_err_free(res);  /* TODO: error reporting. */
+					break_for = true;
+				} else {
+					/* continue with a new argument slot */
+					new_arg;
+					valid_lexeme_count++;
+				}
+
+				break;
 			}
+
+			case MAS_GRAMMAR_SYMBOL_NOPARAM:
+				break_for = true;
+				valid_lexeme_count = 0;
+				break;
+
+			case MAS_GRAMMAR_SYMBOL_QUALIFICATION:
+				/* TODO: regex qualifications */
+				break;
+
+			case MAS_GRAMMAR_SYMBOL_ALTS_END:
+				_unreachable; break;
+			}
+
+			if (break_for)
+				break;
 		}
 
 		/* The next symbol should be end of params sentinel. */
-		arg_idx++;
-		if (current_symbol.ty == MAS_GRAMMAR_SYMBOL_PARAMS_END &&
-		    arg_idx - 1 == lexeme_count  /* we exceeded argument count
-						    by exactly one */) {
-			/* TODO: push instruction to asm items. */
+		if ((current_symbol.ty == MAS_GRAMMAR_SYMBOL_PARAMS_END ||
+		     current_symbol.ty == MAS_GRAMMAR_SYMBOL_NOPARAM) &&
+		    lexeme_count == valid_lexeme_count) {
+			size_t args_len = fstack_arg_buf_len(&h->args);
+			struct asm_item_inst inst = {
+				.grammar_idx = grammar_idx,
+				.args_len = args_len,
+				.opcode = opcode,
+				.alt_idx = alt_idx
+			};
+			const char *args = fstack_arg_buf_at(&h->args, 0);
+
+			fstack_asm_items_xmultipush(&h->asm,
+						    (void *) &inst,
+						    sizeof(inst));
+			fstack_asm_items_xmultipush(&h->asm,
+						    args,
+						    args_len);
+
+			h->output_size += g->get_inst_size(opcode,
+							   args,
+							   alt_idx,
+							   NULL /* TODO: extensions */);
+
 			return NULL;
 		}
 	}
+
 	return err_xnew_syntax("No match for the instruction.");
 }
 
@@ -174,6 +216,35 @@ void mas_handle_yxfeed(struct mas_handle *h,
 }
 
 mas_err_t *mas_handle_finalize_and_destroy(struct mas_handle *h,
-					   char *out);
+					   char *out)
+{
+	for (size_t i = 0; i < fstack_asm_items_len(&h->asm); ){
+		const struct asm_item_inst *inst =
+			(void *) fstack_asm_items_at(&h->asm, i);
 
-size_t mas_handle_get_output_size(const struct mas_handle *h);
+		const struct mas_grammar *g =
+			fstack_grammars_at(&h->mas->grammars,
+					   inst->grammar_idx);
+
+		g->emit(inst->opcode,
+			inst->args,
+			inst->alt_idx,
+			out,
+			NULL  /* TODO: extensions */);
+
+		out += g->get_inst_size(inst->opcode,
+					inst->args,
+					inst->alt_idx,
+					NULL /* TODO: extensions */);
+
+		i += inst->args_len + sizeof(struct asm_item_inst);
+	}
+
+	mas_handle_destroy(h);
+	return NULL;
+}
+
+size_t mas_handle_get_output_size(const struct mas_handle *h)
+{
+	return h->output_size;
+}
