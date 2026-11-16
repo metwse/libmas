@@ -1,6 +1,6 @@
 /**
  * @file grammar.h
- * @brief libmas grammar object interface.
+ * @brief Grammar object interface of the libmas.
  */
 
 #ifndef MAS_GRAMMAR_H
@@ -86,7 +86,7 @@ typedef mas_err_t *mas_grammar_validate_arg_method_t(
  *
  * @param opcode Numeric identifier for the mnemonic.
  * @param args Pointer to instruction arguments.
- * @parma alt_idx Index of matched alternative in the grammar.
+ * @param alt_idx Index of matched alternative in the grammar.
  * @param out Output machine code.
  *
  * @return NULL on succes and an error pointer on failure.
@@ -108,17 +108,20 @@ typedef size_t mas_grammar_get_inst_size_method_t(
 
 /** @brief Assembly grammar definitions. */
 struct mas_grammar_symbol {
+	/** Grammar rule type. */
 	enum mas_grammar_symbol_ty {
 		MAS_GRAMMAR_SYMBOL_PARAM_ID  /** A parameter is specified. */,
 		MAS_GRAMMAR_SYMBOL_QUALIFICATION  /** A qualification is specified. */,
 		MAS_GRAMMAR_SYMBOL_PARAMS_END /** End of the list of parameters. */,
 		MAS_GRAMMAR_SYMBOL_ALTS_END /** End of the list of alternatives. */,
 		MAS_GRAMMAR_SYMBOL_NOPARAM /** An alternative with no argument. */,
-	} ty  /** Parameter type. */;
+	} ty  /** Grammar rule type. */;
 
+	/** Grammar rule. */
 	union mas_grammar_symbol_data {
 		mas_grammar_param_id_t param_id  /** A parameter ID. */;
 
+		/** A regex qualification. */
 		enum mas_grammar_symbol_qualification {
 			MAS_GRAMMAR_SYMBOL_QUALIFICATION_ZERO_OR_MORE /** `*` */,
 			MAS_GRAMMAR_SYMBOL_QUALIFICATION_ONE_OR_MORE /** `+` */,

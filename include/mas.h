@@ -1,6 +1,6 @@
 /**
  * @file mas.h
- * @brief libmas main header.
+ * @brief The libmas library.
  */
 
 #ifndef MAS_H
@@ -63,7 +63,8 @@ mas_err_t *mas_handle_xfeed(struct mas_handle *mas_handle,
 			    const char *inst_string,
 			    ...) _mas_wur;
 
-/* Similar to mas_handle_xfeed, but raises an error in case of failure. */
+/** @brief Similar to mas_handle_xfeed, but raises an error in case of
+ * failure. */
 void mas_handle_yxfeed(struct mas_handle *mas_handle, const char *inst, ...);
 
 /** @brief Produce the machine code output. */
