@@ -105,40 +105,46 @@ $(document).ready(function() { init_codefold(0); });
 </div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
 <div class="foldopen" id="foldopen00028" data-start="" data-end="">
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#a54f2612a669bfca0da894fdc798ba215">   28</a></span><span class="preprocessor">#define rzero_or_more(sym) { \</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_ZERO_OR_MORE \</span></div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">        }, sym</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#a8dc887719acbcc5635f16f795e8510f6">   28</a></span><span class="preprocessor">#define rno_param { \</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_NOPARAM \</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">        }</span></div>
 </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
-<div class="foldopen" id="foldopen00034" data-start="" data-end="">
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#aa03245739fccfb4df81792e82d86220a">   34</a></span><span class="preprocessor">#define rone_or_more(sym) { \</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_ONE_OR_MORE \</span></div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="preprocessor">        }, sym</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="foldopen" id="foldopen00033" data-start="" data-end="">
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#a54f2612a669bfca0da894fdc798ba215">   33</a></span><span class="preprocessor">#define rzero_or_more(sym) { \</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_ZERO_OR_MORE \</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">        }, sym</span></div>
 </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
-<div class="foldopen" id="foldopen00040" data-start="" data-end="">
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#aea9c37a8fe2418334dd02b7cf59612f1">   40</a></span><span class="preprocessor">#define rzero_or_one(sym) { \</span></div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_ZERO_OR_ONE \</span></div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="preprocessor">        }, sym</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="foldopen" id="foldopen00039" data-start="" data-end="">
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#aa03245739fccfb4df81792e82d86220a">   39</a></span><span class="preprocessor">#define rone_or_more(sym) { \</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_ONE_OR_MORE \</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="preprocessor">        }, sym</span></div>
 </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
-<div class="foldopen" id="foldopen00046" data-start="" data-end="">
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#ae0db1076101852dbe7590fc88d35d14b">   46</a></span><span class="preprocessor">#define rgroup(...) { \</span></div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_GROUP_START \</span></div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="preprocessor">        }, __VA__ARGS, { \</span></div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_GROUP_END \</span></div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="preprocessor">        }</span></div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="foldopen" id="foldopen00045" data-start="" data-end="">
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#aea9c37a8fe2418334dd02b7cf59612f1">   45</a></span><span class="preprocessor">#define rzero_or_one(sym) { \</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_ZERO_OR_ONE \</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">        }, sym</span></div>
 </div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#ade80361c3df89829756eed474ab17d56">   55</a></span><span class="preprocessor">#define alt , { .ty = MAS_GRAMMAR_SYMBOL_PARAMS_END } }, {</span></div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
+<div class="foldopen" id="foldopen00051" data-start="" data-end="">
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#ae0db1076101852dbe7590fc88d35d14b">   51</a></span><span class="preprocessor">#define rgroup(...) { \</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_GROUP_START \</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="preprocessor">        }, __VA__ARGS, { \</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="preprocessor">                .ty = MAS_GRAMMAR_SYMBOL_QUALIFICATION, \</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="preprocessor">                .data.qualification = MAS_GRAMMAR_SYMBOL_QUALIFICATION_GROUP_END \</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="preprocessor">        }</span></div>
+</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="grammar-dsl_8h.html#ade80361c3df89829756eed474ab17d56">   60</a></span><span class="preprocessor">#define alt , { .ty = MAS_GRAMMAR_SYMBOL_PARAMS_END } }, {</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="preprocessor">#endif</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

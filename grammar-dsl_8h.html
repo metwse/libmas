@@ -98,6 +98,9 @@ Macros</h2></td></tr>
 <tr class="memitem:ae0db1076101852dbe7590fc88d35d14b" id="r_ae0db1076101852dbe7590fc88d35d14b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="grammar-dsl_8h.html#ae0db1076101852dbe7590fc88d35d14b">rgroup</a>(...)</td></tr>
 <tr class="memdesc:ae0db1076101852dbe7590fc88d35d14b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Grouped symbols.  <br /></td></tr>
 <tr class="separator:ae0db1076101852dbe7590fc88d35d14b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8dc887719acbcc5635f16f795e8510f6" id="r_a8dc887719acbcc5635f16f795e8510f6"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="grammar-dsl_8h.html#a8dc887719acbcc5635f16f795e8510f6">rno_param</a></td></tr>
+<tr class="memdesc:a8dc887719acbcc5635f16f795e8510f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">An instruction with no parameter.  <br /></td></tr>
+<tr class="separator:a8dc887719acbcc5635f16f795e8510f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa03245739fccfb4df81792e82d86220a" id="r_aa03245739fccfb4df81792e82d86220a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="grammar-dsl_8h.html#aa03245739fccfb4df81792e82d86220a">rone_or_more</a>(sym)</td></tr>
 <tr class="memdesc:aa03245739fccfb4df81792e82d86220a"><td class="mdescLeft">&#160;</td><td class="mdescRight">One or more qualifier.  <br /></td></tr>
 <tr class="separator:aa03245739fccfb4df81792e82d86220a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -130,7 +133,7 @@ Macros</h2></td></tr>
 
 <p>Seperates grammar alternatives. </p>
 
-<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00055">55</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00060">60</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
 
 </div>
 </div>
@@ -213,7 +216,28 @@ Macros</h2></td></tr>
 </div><!-- fragment -->
 <p>Grouped symbols. </p>
 
-<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00046">46</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00051">51</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
+
+</div>
+</div>
+<a id="a8dc887719acbcc5635f16f795e8510f6" name="a8dc887719acbcc5635f16f795e8510f6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8dc887719acbcc5635f16f795e8510f6">&#9670;&#160;</a></span>rno_param</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define rno_param</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">                { \</div>
+<div class="line">                .ty = MAS_GRAMMAR_SYMBOL_NOPARAM \</div>
+<div class="line">        }</div>
+</div><!-- fragment -->
+<p>An instruction with no parameter. </p>
+
+<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00028">28</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
 
 </div>
 </div>
@@ -239,7 +263,7 @@ Macros</h2></td></tr>
 </div><!-- fragment -->
 <p>One or more qualifier. </p>
 
-<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00034">34</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00039">39</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
 
 </div>
 </div>
@@ -291,7 +315,7 @@ Macros</h2></td></tr>
 </div><!-- fragment -->
 <p>Zero or more qualifier. </p>
 
-<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00028">28</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00033">33</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
 
 </div>
 </div>
@@ -317,7 +341,7 @@ Macros</h2></td></tr>
 </div><!-- fragment -->
 <p>Zero or one qualifier. </p>
 
-<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00040">40</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="grammar-dsl_8h_source.html#l00045">45</a> of file <a class="el" href="grammar-dsl_8h_source.html">grammar-dsl.h</a>.</p>
 
 </div>
 </div>
